@@ -59,7 +59,7 @@ param vNetName string = ''
 param dtsName string = ''
 param taskHubName string = ''
 param dtsLocation string = location
-param dtsSkuName string = 'Dedicated'
+param dtsSkuName string = 'Consumption'
 param dtsCapacity int = 1
 @description('Id of the user identity to be used for testing and debugging. This is not required in production. Leave empty if not needed.')
 param principalId string = deployer().objectId
