@@ -14,7 +14,6 @@ resource dts 'Microsoft.DurableTask/schedulers@2025-04-01-preview' = {
     ipAllowlist: ipAllowlist
     sku: {
       name: skuName
-      capacity: skuCapacity
     }
   }
 }
