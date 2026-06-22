@@ -28,6 +28,7 @@ Durable Functions needs a [backend provider](https://learn.microsoft.com/azure/a
 + [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 + [Azure Functions Core Tools](https://learn.microsoft.com/azure/azure-functions/functions-run-local?pivots=programming-language-csharp#install-the-azure-functions-core-tools)
 + [Azure Developer CLI (`azd`)](https://learn.microsoft.com/azure/developer/azure-developer-cli/install-azd)
++ [Azurite storage emulator](https://learn.microsoft.com/azure/storage/common/storage-use-azurite)
 + To use Visual Studio to run and debug locally:
   + [Visual Studio 2022](https://visualstudio.microsoft.com/vs/).
   + Make sure to select the **Azure development** workload during installation.
@@ -76,13 +77,7 @@ You're prompted to supply these required deployment parameters:
 | _Environment name_ | An environment that's used to maintain a unique deployment context for your app. You won't be prompted if you created the local project using `azd init`.|
 | _Azure subscription_ | Subscription in which your resources are created.|
 | _Azure location_ | Azure region in which to create the resource group that contains the new Azure resources. Only regions that currently support the Flex Consumption plan are shown.|
-
-By default, this sample prompts to enable a virtual network for enhanced security. If you want to provision without a virtual network without prompting, you can configure `VNET_ENABLED` to `false` before running `azd provision`:
-
-```bash
-azd env set VNET_ENABLED false
-azd provision
-```
+| _VNET_ENABLED_ | Whether to deploy with a virtual network for enhanced security. Select `true` or `false`.|
 
 After provisioning completes, a `postprovision` hook automatically generates the `fanoutfanin/local.settings.json` file with your DTS connection information.
 
@@ -94,10 +89,11 @@ After provisioning completes, a `postprovision` hook automatically generates the
     cd fanoutfanin
     ```
 
-1. Start the Azurite storage emulator. The Functions runtime requires a storage component for internal state management. Choose one of these options:
+1. Start the Azurite storage emulator. The Functions runtime requires a storage component for internal state management:
 
-    + **Option 1 (npx):** `npx azurite --skipApiVersionCheck --location ~/azurite-data`
-    + **Option 2 (Docker):** `docker run -p 10000:10000 -p 10001:10001 -p 10002:10002 mcr.microsoft.com/azure-storage/azurite`
+    ```shell
+    azurite
+    ```
 
 1. In a new terminal, start the Functions host locally:
 
@@ -105,9 +101,9 @@ After provisioning completes, a `postprovision` hook automatically generates the
     func start
     ```
 
-1. From your HTTP test tool in a new terminal (or from your browser), call the HTTP trigger endpoint: <http://localhost:7071/api/FetchOrchestration_HttpStart> to start a new orchestration instance. This orchestration then fans out to several activities to fetch the titles of Microsoft Learn articles in parallel. When the activities finish, the orchestration fans back in and returns the titles as a formatted string. 
+1. From your HTTP test tool in a new terminal (or from your browser), call the HTTP trigger endpoint: <http://localhost:7071/api/FetchOrchestration_HttpStart> to start a new orchestration instance. This orchestration then fans out to several activities to fetch the titles of Microsoft Learn articles in parallel. When the activities finish, the orchestration fans back in and returns the titles as a formatted string.
 
-    The HTTP endpoint should return several URLs (showing a few below for brevity). The `statusQueryGetUri` provides the orchestration status.
+    The HTTP endpoint returns a set of URLs that manage the orchestration, which looks like this fragment:
 
     ```json
     {
@@ -117,6 +113,22 @@ After provisioning completes, a `postprovision` hook automatically generates the
         "terminatePostUri": "http://localhost:7071/runtime/webhooks/durabletask/instances/9addc67238604701a38d1470874a5f04/terminate?reason={text}&taskHub=TestHubName&connection=Storage&code<code>",
     }
     ```
+
+1. Navigate to the `statusQueryGetUri` URL in your browser to check the orchestration status. When the orchestration completes, the response looks like this:
+
+    ```json
+    {
+        "name": "FetchOrchestration",
+        "instanceId": "987adada388a496b85bbc5496a54dd58",
+        "runtimeStatus": "Completed",
+        "input": null,
+        "output": "Durable Functions Overview: Stateful Serverless Workflows; Durable Task Scheduler - Durable Task; Azure Functions Scenarios; Use AI tools and models in Azure Functions",
+        "createdTime": "2026-06-22T06:58:58Z",
+        "lastUpdatedTime": "2026-06-22T06:59:00Z"
+    }
+    ```
+
+    The `output` field contains the article titles fetched in parallel by the fan-out/fan-in orchestration.
 
 1. When you're done, press Ctrl+C in the terminal window to stop the `func.exe` host process.
 
@@ -135,45 +147,6 @@ After provisioning completes, a `postprovision` hook automatically generates the
 1. From your HTTP test tool in a new terminal (or from your browser), call the HTTP trigger endpoint: <http://localhost:7071/api/FetchOrchestration_HttpStart> to start a new orchestration instance.
 1. The HTTP endpoint should return several URLs. The `statusQueryGetUri` provides the orchestration status.
 
-## Source Code
-
-Fanning out is easy to do with regular functions, simply send multiple messages to a queue. However, fanning in is more challenging, because you need to track when all the functions are completed and store the outputs.
-
-Durable Functions makes implementing fan-out/fan-in easy for you. This sample uses a simple scenario of fetching article titles in parallel to demonstrate how you can implement the pattern with Durable Functions. In `FetchOrchestration`, the title fetching activities are tracked using a dynamic task list. The line `await Task.WhenAll(parallelTasks);` waits for all the called activities, which are run concurrently, to complete. When done, all outputs are aggregated as a formatted string. More sophisticated aggregation logic is probably required in real-world scenarios, such as uploading the result to storage or sending it downstream, which you can do by calling another activity function.
-
-```csharp
-[Function(nameof(FetchOrchestration))]
-public static async Task<string> RunOrchestrator(
-    [OrchestrationTrigger] TaskOrchestrationContext context)
-{
-    ILogger logger = context.CreateReplaySafeLogger(nameof(FetchOrchestration));
-    logger.LogInformation("Fetching data.");
-    var parallelTasks = new List<Task<string>>();
-    
-    // List of URLs to fetch titles from
-    var urls = new List<string>
-    {
-        "https://learn.microsoft.com/azure/azure-functions/durable/durable-functions-overview",
-        "https://learn.microsoft.com/azure/azure-functions/durable/durable-task-scheduler/durable-task-scheduler",
-        "https://learn.microsoft.com/azure/azure-functions/functions-scenarios",
-        "https://learn.microsoft.com/azure/azure-functions/functions-create-ai-enabled-apps",
-    };
-
-    // Run fetching tasks in parallel
-    foreach (var url in urls)
-    {
-        Task<string> task = context.CallActivityAsync<string>(nameof(FetchTitleAsync), url);
-        parallelTasks.Add(task);
-    }
-    
-    // Wait for all the parallel tasks to complete before continuing
-    await Task.WhenAll(parallelTasks);
-    
-    // Return fetched titles as a formatted string
-    return string.Join(", ", parallelTasks.Select(t => t.Result));
-}
-```
-
 ## Deploy to Azure
 
 After you've verified the app works locally, deploy your code to the provisioned function app in Azure:
@@ -184,13 +157,13 @@ azd deploy
 
 ## Test deployed app
 
-Once deployment is done, test the Durable Functions app by making an HTTP request to trigger the start of an orchestration. To get the endpoint quickly, run the following: 
+Once deployment is done, test the Durable Functions app by making an HTTP request to trigger the start of an orchestration. To get the function URL with access key, run the following: 
 
 ```shell
-az functionapp function list --resource-group <resource-group-name> --name <function-app-name> --query "[].{name:name, url:invokeUrlTemplate}" --output table
+func azure functionapp list-functions "$(azd env get-value AZURE_FUNCTION_NAME)" --show-keys
 ```
 
-The endpoint should look like: `https://<function-app-name>.azurewebsites.net/api/FetchOrchestration_HttpStart`
+Copy the `Invoke url` value for `FetchOrchestration_HttpStart` and open it in a browser or use `curl` to start a new orchestration.
 
 ## Redeploy your code
 
