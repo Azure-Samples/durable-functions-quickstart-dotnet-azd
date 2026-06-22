@@ -165,6 +165,16 @@ func azure functionapp list-functions "$(azd env get-value AZURE_FUNCTION_NAME)"
 
 Copy the `Invoke url` value for `FetchOrchestration_HttpStart` and open it in a browser or use `curl` to start a new orchestration.
 
+## Monitor with the DTS dashboard
+
+In Azure, open the deployed Durable Task Scheduler resource (type `Microsoft.DurableTask/schedulers`) in the Azure portal and follow the **Dashboard** link to inspect orchestrations, activities, history, and instance state.
+
+To find the scheduler name quickly:
+
+```shell
+azd show
+```
+
 ## Redeploy your code
 
 You can run the `azd deploy` command as many times as you need to deploy code updates to your function app. To reprovision infrastructure changes, run `azd provision` again.
