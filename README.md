@@ -1,7 +1,7 @@
 <!--
 ---
 name: Durable Functions C# Fan-Out/Fan-In using Azure Developer CLI
-description: This repository contains a Durable functions quickstart written in C# demonstrating the fan-out/fan-in pattern. It's deployed to Azure Functions Flex Consumption plan using the Azure Developer CLI (azd). The sample uses managed identity and a virtual network to make sure deployment is secure by default.
+description: This repository contains a Durable functions quickstart written in C# demonstrating the fan-out/fan-in pattern. It's deployed to Azure Functions Flex Consumption plan using the Azure Developer CLI (azd). The sample uses managed identities to secure communication between services, and you can optionally create a secure deployment in a virtual network.
 page_type: sample
 products:
 - azure-functions
@@ -17,7 +17,7 @@ languages:
 
 # Durable Functions Fan-Out/Fan-In using Azure Developer CLI
 
-This template repository contains a Durable Functions sample demonstrating the fan-out/fan-in pattern in C# (isolated process model). The sample can be easily deployed to Azure using the Azure Developer CLI (`azd`). It uses managed identity and a virtual network to make sure deployment is secure by default. You can opt out of a VNet being used in the sample by setting VNET_ENABLED to false in the parameters.
+This template repository contains a Durable Functions sample demonstrating the fan-out/fan-in pattern in C# (isolated process model). The sample can be easily deployed to Azure using the Azure Developer CLI (`azd`). It uses managed identities to secure communication between services, and you can optionally create a secure deployment in a virtual network.
 
 [Durable Functions](https://learn.microsoft.com/azure/azure-functions/durable/durable-functions-overview) is part of Azure Functions offering. It helps orchestrate stateful logic that's long-running or multi-step by providing *durable execution*. An execution is durable when it can continue in another process or machine from the point of failure in the face of interruptions or infrastructure failures. Durable Functions handles automatic retries and state persistence as your orchestrations run to ensure durable execution. 
 
@@ -77,7 +77,7 @@ You're prompted to supply these required deployment parameters:
 | _Environment name_ | An environment that's used to maintain a unique deployment context for your app. You won't be prompted if you created the local project using `azd init`.|
 | _Azure subscription_ | Subscription in which your resources are created.|
 | _Azure location_ | Azure region in which to create the resource group that contains the new Azure resources. Only regions that currently support the Flex Consumption plan are shown.|
-| _VNET_ENABLED_ | Whether to deploy with a virtual network for enhanced security. Select `true` or `false`.|
+| _vnetEnabled_ | Whether to deploy with a virtual network for enhanced security. Select `true` or `false`.|
 
 After provisioning completes, a `postprovision` hook automatically generates the `fanoutfanin/local.settings.json` file with your DTS connection information.
 
