@@ -67,6 +67,7 @@ This sample uses a remote Durable Task Scheduler (DTS) resource in Azure as the 
 Run this command to provision the required Azure resources, including the DTS instance:
 
 ```shell
+azd auth login
 azd provision
 ```
 
