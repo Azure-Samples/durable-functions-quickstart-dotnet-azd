@@ -84,19 +84,21 @@ After provisioning completes, a `postprovision` hook automatically generates the
 
 ## Run your app from the terminal
 
-1. Navigate to the `fanoutfanin` folder:
-
-    ```shell
-    cd fanoutfanin
-    ```
-
 1. Start the Azurite storage emulator. The Functions runtime requires a storage component for internal state management:
 
     ```shell
     azurite
     ```
 
-1. In a new terminal, start the Functions host locally:
+1. In a separate terminal, navigate to the `fanoutfanin` folder:
+
+    ```shell
+    cd fanoutfanin
+    ```
+
+    The `fanoutfanin` folder is the root folder for the app and contains the `host.json` file.
+
+1. Start the Functions host:
 
     ```shell
     func start
@@ -150,7 +152,7 @@ After provisioning completes, a `postprovision` hook automatically generates the
 
 ## Deploy to Azure
 
-After you've verified the app works locally, deploy your code to the provisioned function app in Azure:
+After you've verified the app works locally, deploy your code from the project root to the provisioned function app in Azure:
 
 ```shell
 azd deploy
