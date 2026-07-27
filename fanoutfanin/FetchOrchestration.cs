@@ -71,7 +71,7 @@ namespace Company.Function
 
         [Function("FetchOrchestration_HttpStart")]
         public static async Task<HttpResponseData> HttpStart(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequestData req,
+            [HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequestData req,
             [DurableClient] DurableTaskClient client,
             FunctionContext executionContext)
         {
@@ -89,3 +89,4 @@ namespace Company.Function
         }
     }
 }
+
