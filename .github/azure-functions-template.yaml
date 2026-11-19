@@ -1,0 +1,12 @@
+# This descriptor drives template package creation in the packaging pipeline.
+schemaVersion: 1
+
+identity: Azure.Functions.Templates.DurableFanOutFanInDotNet
+description: "Create a .NET isolated Durable Functions app that demonstrates fan-out/fan-in, with Bicep infrastructure for deployment using azd."
+
+projects:
+  - name: Azure Functions Durable Functions Fan-Out/Fan-In QuickStart (.NET)
+    shortName: functions-quickstart-dotnet-durable-fanout-fanin
+    root: .
+    stack: dotnet
+    language: "C#"
