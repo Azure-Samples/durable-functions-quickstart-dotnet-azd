@@ -6,7 +6,7 @@ description: "Create a .NET isolated Durable Functions app that demonstrates fan
 
 projects:
   - name: Azure Functions Durable Functions Fan-Out/Fan-In QuickStart (.NET)
-    shortName: durable-orchestrator-csharp-azd
+    shortName: functions-quickstart-dotnet-durable-fanout-fanin
     root: .
     stack: dotnet
     language: "C#"
